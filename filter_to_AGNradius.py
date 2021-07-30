@@ -207,8 +207,9 @@ if __name__ == "__main__":
         filterlamSI.append(profilelam)
         filtertrans.append(profiletrans)
 
-    #USER: choose range for y-axis
+    #USER: choose range for y-axis and x-axis
     plt.ylim(0.0,0.01)
+    plt.xlim(0.0, 2000.0)
 
     #END DISPLAY INPUTS
 
@@ -245,7 +246,6 @@ if __name__ == "__main__":
         #keep track of radial dependence by filter
         F_tot_ann_iter.append(F_tot_ann)
 
-    plt.xlim(0.0, 2000.0)
     for i in range(len(filter_filenames)):
         #plot
         ax1.plot(radius, F_tot_ann_iter[i]/F_tot[i], ls='solid', linewidth=2)

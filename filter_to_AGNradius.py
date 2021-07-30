@@ -133,6 +133,13 @@ def get_filter(path, filename):
     return lam1, trans1
 
 if __name__ == "__main__":
+    #
+    #To run, at command line enter:
+    #$ python filter_to_AGNradius.py x y z
+    #    here x=SMBH mass in solar masses
+    #         y=mass accretion rate in fraction of Eddington
+    #         z=redshift
+    #
     #F_lam=sum over all blackbodies, assuming T(r), annuli of area=2piRdeltaR
     #integrating over solid angle=pi
     #BB intensity=2hc^2/lam^5 * 1/(exp(hc/lamkT)-1)
@@ -140,11 +147,11 @@ if __name__ == "__main__":
     
     #BEGIN PHYSICAL INPUTS:
     #M_SMBH=mass of supermassive black hole in units of solar masses
-    M_SMBH=1.0e7
+    M_SMBH=float(sys.argv[1])
     #dotm_edd=accretion rate in units of Eddington accretion
-    dotm_edd=0.01
+    dotm_edd=float(sys.argv[2])
     #redshift of object
-    redshift=0.0
+    redshift=float(sys.argv[3])
     #Choose temperature profile model
     #see also 'find_Temp' for more details
     #options are:

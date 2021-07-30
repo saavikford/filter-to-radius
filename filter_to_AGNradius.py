@@ -201,14 +201,14 @@ if __name__ == "__main__":
         fn=filter_filenames[i]
         profilelam, profiletrans=get_filter(filterpath, fn)
         #convert wavelengths from Angstroms to nm
-        profilelam=profilelam/10.0
+        profilelam=(profilelam/10.0)/(1.0+redshift)
         filterlam.append(profilelam)
-        profilelam=profilelam*1.0e-9 #converting nm to m
+        profilelam=profilelam*1.0e-9/(1.0+redshift) #converting nm to m
         filterlamSI.append(profilelam)
         filtertrans.append(profiletrans)
 
     #USER: choose range for y-axis and x-axis
-    plt.ylim(0.0,0.01)
+    plt.ylim(0.0,0.02)
     plt.xlim(0.0, 2000.0)
 
     #END DISPLAY INPUTS

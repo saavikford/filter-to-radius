@@ -181,7 +181,7 @@ if __name__ == "__main__":
     #add axes & label them
     ax1=fig1.add_axes(rect1)
     ax1.set_ylabel(r"$F(R_{disk})/F_{tot}$")
-    ax1.set_xlabel(r"$log(R_{disk} \ (R_{g}))$")
+    ax1.set_xlabel(r"$R_{disk} \ (R_{g})$")
     #Title include variable values 
     ax1.set_title(r"$M_{SMBH}=%.1e \ M_{\odot}, \ \dotM=%.2f \ \dotM_{edd}, \ z=%.1f$" %(M_SMBH,dotm_edd,redshift))
 

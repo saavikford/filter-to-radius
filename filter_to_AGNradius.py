@@ -163,6 +163,8 @@ if __name__ == "__main__":
 
     #choose observing filter (specify filename and path)
     #files should contain ONLY wavelengths in Angstroms (column 0) and transmission fraction (column 1)
+    #USER: program assumes 2 filters, if only one, please duplicate name.
+    #USER: if >2 filters please edit output text file format (search !!!)
     filterpath=''
     filter_filenames=['Palomar_ZTF.g.dat', 'Palomar_ZTF.r.dat']
     
@@ -250,5 +252,16 @@ if __name__ == "__main__":
         #plot
         ax1.plot(radius, F_tot_ann_iter[i]/F_tot[i], ls='solid', linewidth=2)
 
-    savefig('filter_to_AGNradius.pdf')
-    show()
+    #output plot with variable filename
+    outputprefix="filter2radius_M_SMBH%sdotmedd%.2fz%.1f" %(log10(M_SMBH), dotm_edd, redshift)
+    savefig(outputprefix+'.png')
+        
+    #output textfile of plot contents
+    #USER: !!! if >2 filters, add appropriate columns to writelines command
+    #USER: !!! AND column titles in line preceding for loop
+    f2=open(outputprefix+'.txt','wb')
+    f2.write('M_SMBH (Msun)=%.1e, dotm_edd=%.2f, z=%.1f, filters=%s \n' %(M_SMBH, dotm_edd, redshift, filter_filenames))
+    f2.write('R (r_g_SMBH),  F(R)/Ftot [filter1], F(R)/Ftot [filter2]\n')
+    for i in range(len(radius)):
+        f2.writelines('%.2f %.2e %.2e\n' %(radius[i], F_tot_ann_iter[0][i]/F_tot[0], F_tot_ann_iter[1][i]/F_tot[1]))
+    f2.close()

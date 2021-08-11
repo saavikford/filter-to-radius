@@ -8,8 +8,24 @@
 #  -add up continuum as a function of wavelength
 #  -find total continuum flux in specified filter
 #  -find contribution to total continuum flux in specified filter from annulus of radius R as a function of R
+#  -plot, and output to .txt file
+#
+#  -!!!find timescales too
 #
 #To use:
+# in appropriate directory, with files containing desired filter profiles
+# At prompt type:
+#
+#   python filter_to_AGNradius.py MSMBH dotmedd z
+#
+#     Inputs are:
+#     MSMBH is SMBH mass in solar masses
+#     dotmedd is mass accretion rate in Eddington units
+#     z is redshift
+#
+# Outputs: .png file with plot and .txt file to recreate plot (both labeled by input params)
+#
+#
 # User serviceable parts limited to:
 #   --variables listed (and documented) between 'BEGIN PHYSICAL INPUTS' and 'END PHYSICAL INPUTS'
 #   --variables preceded by 'USER' in the DISPLAY INPUTS section
@@ -19,7 +35,9 @@
 #
 # No warranty express or implied. Use at your own risk. Does not prevent drowning.
 #
-#Descended in part from mcd_gap_v4_0_b1.py (by K. E. Saavik Ford)
+#Descended in part from:
+#   mcd_gap_v4_0_b1.py
+#   mock_photometry_v2_0_b1.py
 #
 ####
 #
@@ -167,6 +185,7 @@ if __name__ == "__main__":
     #USER: if >2 filters please edit output text file format (search !!!)
     filterpath=''
     filter_filenames=['Palomar_ZTF.g.dat', 'Palomar_ZTF.r.dat']
+    filter_colors=['b','r']
     
     #USER can, but probably should not, alter the following physical
     #variables without thinking really hard:
@@ -177,6 +196,10 @@ if __name__ == "__main__":
     radius_out=1.0e4
     #epsilon=radiative efficiency, depends on spin of SMBH, assume 0.1
     epsilon=0.1
+    #alpha disk parameter
+    alpha=0.03
+    #disk aspect ratio
+    HoverR=0.05
     #END PHYSICAL INPUTS
 
     #BEGIN DISPLAY INPUTS:
@@ -184,15 +207,21 @@ if __name__ == "__main__":
     #params for axes
     #format=left, bottom, width, height
     rect1=0.1,0.1,0.75,0.75
+    rect2=0.1,0.1,0.75,0.75
     
-    #make figure
+    #make figures
     fig1=plt.figure(1)
+    fig2=plt.figure(2)
     #add axes & label them
     ax1=fig1.add_axes(rect1)
     ax1.set_ylabel(r"$F(R_{disk})/F_{tot}$")
     ax1.set_xlabel(r"$R_{disk} \ (R_{g})$")
+    ax2=fig2.add_axes(rect2)
+    ax2.set_ylabel(r"$F(R_{disk})/F_{tot}$")
+    ax2.set_xlabel(r"$t(R_{disk}) \ (yr)$")
     #Title include variable values 
     ax1.set_title(r"$M_{SMBH}=%.1e \ M_{\odot}, \ \dotM=%.2f \ \dotM_{edd}, \ z=%.1f$" %(M_SMBH,dotm_edd,redshift))
+    ax2.set_title(r"$M_{SMBH}=%.1e \ M_{\odot}, \ \dotM=%.2f \ \dotM_{edd}, \ z=%.1f$" %(M_SMBH,dotm_edd,redshift))
 
     #set up ranges
     #Get filter function
@@ -209,7 +238,7 @@ if __name__ == "__main__":
         filterlamSI.append(profilelam)
         filtertrans.append(profiletrans)
 
-    #USER: choose range for y-axis and x-axis
+    #USER: choose range for y-axis and x-axis for fig 1
     plt.ylim(0.0,0.02)
     plt.xlim(0.0, 2000.0)
 
@@ -222,6 +251,12 @@ if __name__ == "__main__":
     #divvy up disk radii
     log_radius=np.arange(log10(radius_in),log10(radius_out),0.01)
     radius=pow(10,log_radius)
+    #transform radii to timescales
+    #from Stern et al. 2018, output in units of seconds
+    t_orb=8.64e5*(M_SMBH/1.0e8)*pow((radius/150.0), 1.5)
+    t_thermal=3.15e7*(0.03/alpha)*(M_SMBH/1.0e8)*pow((radius/150.0), 1.5)
+    t_front=6.3e8*(0.05/HoverR)*(0.03/alpha)*(M_SMBH/1.0e8)*pow((radius/150.0), 1.5)
+    t_visc=1.26e10*pow((HoverR/0.05),-2.0)*(1.0/alpha)*(M_SMBH/1.0e8)*pow((radius/150.0), 1.5)
     #initialize final arrays/vars
     F_tot=np.zeros(len(filter_filenames))
     F_tot_ann_iter=[]
@@ -248,20 +283,37 @@ if __name__ == "__main__":
         #keep track of radial dependence by filter
         F_tot_ann_iter.append(F_tot_ann)
 
+    plt.ylim(0.0,0.02)
+    plt.xlim(0.0, 2000.0)
+    #plot fig 1
     for i in range(len(filter_filenames)):
         #plot
         ax1.plot(radius, F_tot_ann_iter[i]/F_tot[i], ls='solid', linewidth=2)
 
-    #output plot with variable filename
-    outputprefix="filter2radius_M_SMBH%sdotmedd%.2fz%.1f" %(log10(M_SMBH), dotm_edd, redshift)
-    savefig(outputprefix+'.png')
-        
-    #output textfile of plot contents
+    #output plot 1 with variable filename
+    outputprefix1="filter2radius_M_SMBH%sdotmedd%.2fz%.1f" %(log10(M_SMBH), dotm_edd, redshift)
+    fig1.savefig(outputprefix1+'.png')
+    
+    #output textfile of plot 1 contents
     #USER: !!! if >2 filters, add appropriate columns to writelines command
     #USER: !!! AND column titles in line preceding for loop
-    f2=open(outputprefix+'.txt','wb')
+    f2=open(outputprefix1+'.txt','wb')
     f2.write('M_SMBH (Msun)=%.1e, dotm_edd=%.2f, z=%.1f, filters=%s \n' %(M_SMBH, dotm_edd, redshift, filter_filenames))
     f2.write('R (r_g_SMBH),  F(R)/Ftot [filter1], F(R)/Ftot [filter2]\n')
     for i in range(len(radius)):
         f2.writelines('%.2f %.2e %.2e\n' %(radius[i], F_tot_ann_iter[0][i]/F_tot[0], F_tot_ann_iter[1][i]/F_tot[1]))
     f2.close()
+
+    #reset plot limits for fig 2 (!!!fix this)
+    #plt.ylim(0.0,0.01)
+    plt.xlim(0.0, 1.0)
+    #plot fig 2!!! this is still a lie... not redshift corrected
+    for i in range(len(filter_filenames)):
+        #plot
+        ax2.plot((t_orb*(1.0+redshift))/3.15e7, F_tot_ann_iter[i]/F_tot[i], filter_colors[i], ls='solid', linewidth=2)
+        ax2.plot((t_thermal*(1.0+redshift))/3.15e7, F_tot_ann_iter[i]/F_tot[i], filter_colors[i], ls='solid', linewidth=2)
+        ax2.plot((t_front*(1.0+redshift))/3.15e7, F_tot_ann_iter[i]/F_tot[i], filter_colors[i], ls='solid', linewidth=2)
+        ax2.plot((t_visc*(1.0+redshift))/3.15e7, F_tot_ann_iter[i]/F_tot[i], filter_colors[i], ls='solid', linewidth=2)
+
+    outputprefix2="filter2radiustimescales_M_SMBH%sdotmedd%.2fz%.1f" %(log10(M_SMBH), dotm_edd, redshift)
+    fig2.savefig(outputprefix2+'.png')
